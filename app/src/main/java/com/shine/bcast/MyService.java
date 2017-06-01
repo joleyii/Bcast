@@ -14,7 +14,6 @@ import android.support.annotation.RequiresApi;
 public class MyService extends Service {
 
     private MyVideoMonitor monitor;
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -25,7 +24,7 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        monitor = MyVideoMonitor.getInstance(MainActivity.getProjection());
+        monitor= MyVideoMonitor.getInstance(MainActivity.getProjection());
     }
 
     @Override

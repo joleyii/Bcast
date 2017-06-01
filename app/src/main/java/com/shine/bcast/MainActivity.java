@@ -37,10 +37,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void init() {
         findViewById(R.id.start_capture).setOnClickListener(this);
         mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-        mediaCallback = new CustomMediaCallBack();
+        mediaCallback=new CustomMediaCallBack();
 //        surfaceView= (SurfaceView) findViewById(R.id.surface);
 //        mSurface=surfaceView.getHolder().getSurface();
-        service = new MyService();
+        service=new MyService();
     }
 
     @Override
@@ -66,10 +66,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     projection = mediaProjectionManager.getMediaProjection(resultCode, data);
 
                     // 注册回调:
-                    projection.registerCallback(mediaCallback, null);
+                    projection.registerCallback(mediaCallback,null);
 
 
-                    startService(new Intent(MainActivity.this, MyService.class));
+                    startService(new Intent(MainActivity.this,MyService.class));
 
                     break;
             }
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
 
-        if (projection != null) {
+        if(projection!=null){
             projection.unregisterCallback(mediaCallback);
         }
     }
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        }
     }
 
-    public static MediaProjection getProjection() {
+    public static MediaProjection getProjection(){
         return projection;
     }
 }
