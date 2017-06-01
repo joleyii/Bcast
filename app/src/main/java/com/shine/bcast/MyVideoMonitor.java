@@ -27,21 +27,21 @@ public final class MyVideoMonitor {
 
     private Sender sender;
 
-    private MyVideoMonitor(MediaProjection projection){
-        this.projection=projection;
+    private MyVideoMonitor(MediaProjection projection) {
+        this.projection = projection;
     }
 
-    public static MyVideoMonitor getInstance(MediaProjection projection){
-        if(mMonitor==null){
-            mMonitor=new MyVideoMonitor(projection);
+    public static MyVideoMonitor getInstance(MediaProjection projection) {
+        if (mMonitor == null) {
+            mMonitor = new MyVideoMonitor(projection);
         }
         return mMonitor;
     }
 
     //初始化编码器
-    public void init(){
+    public void init() {
         try {
-           mVideoEncoder =MediaCodec.createEncoderByType("video/avc");
+            mVideoEncoder = MediaCodec.createEncoderByType("video/avc");
 //           mVideoEncoder=MediaCodec.createByCodecName(C)
         } catch (IOException e) {
             e.printStackTrace();
@@ -63,34 +63,34 @@ public final class MyVideoMonitor {
 //        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1); // 1 seconds between I-frames
 
 
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 3000000);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, Utils.SCREEN_WIDTH * Utils.SCREEN_HEIGHT * 5);
 //        format.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-        format.setFloat(MediaFormat.KEY_FRAME_RATE, 60.0f);
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10);
+        format.setFloat(MediaFormat.KEY_FRAME_RATE, 10.0f);
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
 
         mVideoEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 
-        Surface surface=mVideoEncoder.createInputSurface();
+        Surface surface = mVideoEncoder.createInputSurface();
 
         mVideoEncoder.start();
 
-        projection.createVirtualDisplay("MyMYMY",Utils.SCREEN_WIDTH,Utils.SCREEN_HEIGHT,1, 0, surface,null,null);
+        projection.createVirtualDisplay("MyMYMY", Utils.SCREEN_WIDTH, Utils.SCREEN_HEIGHT, 1, 0, surface, null, null);
 
-        Log.e("Binson","视频流编码器初始化完成!");
+        Log.e("Binson", "视频流编码器初始化完成!");
 
-        sender=new Sender();
+        sender = new Sender();
         new Thread(sender).start();
 
     }
 
-    public void work1(OutputStream outputStream){
-        ByteBuffer[] byteBuffers=mVideoEncoder.getOutputBuffers();
+    public void work1(OutputStream outputStream) {
+        ByteBuffer[] byteBuffers = mVideoEncoder.getOutputBuffers();
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-        boolean encoderDone=false;
+        boolean encoderDone = false;
 
-        while(!encoderDone){
-            int encoderStatus=mVideoEncoder.dequeueOutputBuffer(info,0);
+        while (!encoderDone) {
+            int encoderStatus = mVideoEncoder.dequeueOutputBuffer(info, 0);
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 // no output available yet
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -110,13 +110,13 @@ public final class MyVideoMonitor {
                 encodedData.limit(info.offset + info.size);
 
 //                encodedData.array();
-                if(outputStream!=null){
+                if (outputStream != null) {
                     try {
-                        byte[] bs=new byte[info.size];
+                        byte[] bs = new byte[info.size];
                         encodedData.get(bs, info.offset, info.offset + info.size);
                         outputStream.write(bs);
                         outputStream.flush();
-                        Log.e("Binson","flush..."+bs.length);
+                        Log.e("Binson", "flush..." + bs.length);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -129,11 +129,10 @@ public final class MyVideoMonitor {
     }
 
 
-
-    public void work(OutputStream outputStream){
+    public void work(OutputStream outputStream) {
         while (true) {
             int bufferIndex = mVideoEncoder.dequeueOutputBuffer(mVideoBufferInfo, 0);
-            Log.e("Binson","index is :"+bufferIndex);
+            Log.e("Binson", "index is :" + bufferIndex);
 
             if (bufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 // nothing available yet
@@ -163,7 +162,7 @@ public final class MyVideoMonitor {
 
                 //Log.d(TAG, "Video buffer offset: " + mVideoBufferInfo.offset + ", size: " + mVideoBufferInfo.size);
                 if (mVideoBufferInfo.size != 0) {
-                    Log.e("Binson","start write");
+                    Log.e("Binson", "start write");
                     encodedData.position(mVideoBufferInfo.offset);
                     encodedData.limit(mVideoBufferInfo.offset + mVideoBufferInfo.size);
                     if (outputStream != null) {
@@ -172,7 +171,7 @@ public final class MyVideoMonitor {
                             encodedData.get(b);
                             outputStream.write(b);
                             outputStream.flush();
-                            Log.e("Binson","flush!!"+b.length);
+                            Log.e("Binson", "flush!!" + b.length);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -208,28 +207,28 @@ public final class MyVideoMonitor {
     }
 
 
-    class Sender implements Runnable{
-        private boolean isStart=true;
+    class Sender implements Runnable {
+        private boolean isStart = true;
         private OutputStream outputStream;
 
         @Override
         public void run() {
             try {
-                Log.e("Binson","start Server");
-                ServerSocket serverSocket=new ServerSocket(60000);
-                Log.e("Binson","Server is On");
-                Socket socket=serverSocket.accept();
-                Log.e("Binson","got Client!");
-                outputStream=socket.getOutputStream();
+                Log.e("Binson", "start Server");
+                ServerSocket serverSocket = new ServerSocket(60000);
+                Log.e("Binson", "Server is On");
+                Socket socket = serverSocket.accept();
+                Log.e("Binson", "got Client!");
+                outputStream = socket.getOutputStream();
                 work1(outputStream);
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.e("Binson","start server error!"+e.toString());
+                Log.e("Binson", "start server error!" + e.toString());
             }
         }
 
-        public void shutDown(){
-            isStart=false;
+        public void shutDown() {
+            isStart = false;
         }
 
     }
