@@ -18,8 +18,8 @@ public final class Utils {
 
         DisplayMetrics metric = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(metric);
-        SCREEN_WIDTH = metric.widthPixels;     // 屏幕宽度（像素）
-        SCREEN_HEIGHT = metric.heightPixels;
+        SCREEN_WIDTH = metric.heightPixels;     // 屏幕宽度（像素）
+        SCREEN_HEIGHT = metric.widthPixels;
         Log.e("Binson", "width:" + SCREEN_WIDTH + ",Height:" + SCREEN_HEIGHT);
     }
 }

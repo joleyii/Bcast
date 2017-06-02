@@ -7,6 +7,8 @@ import android.media.projection.MediaProjection;
 import android.util.Log;
 import android.view.Surface;
 
+import com.example.local.NetworkNative;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -26,9 +28,12 @@ public final class MyVideoMonitor {
     private static MyVideoMonitor mMonitor;
 
     private Sender sender;
+    private NetworkNative networkNative;
 
     private MyVideoMonitor(MediaProjection projection) {
         this.projection = projection;
+        this.networkNative = new NetworkNative();
+        networkNative.OpenSocket();
     }
 
     public static MyVideoMonitor getInstance(MediaProjection projection) {
