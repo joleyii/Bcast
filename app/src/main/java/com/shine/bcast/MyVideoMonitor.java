@@ -11,8 +11,6 @@ import com.example.local.NetworkNative;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 
 /**
@@ -89,14 +87,23 @@ public final class MyVideoMonitor {
 
     }
 
+    byte[] good;
+
     public void work1(OutputStream outputStream) {
         ByteBuffer[] byteBuffers = mVideoEncoder.getOutputBuffers();
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean encoderDone = false;
-
         while (!encoderDone) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             int encoderStatus = mVideoEncoder.dequeueOutputBuffer(info, 0);
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                if (good != null) {
+                    networkNative.SendFrame(good, good.length, 1);
+                }
                 // no output available yet
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                 // not expected for an encoder
@@ -115,17 +122,20 @@ public final class MyVideoMonitor {
                 encodedData.limit(info.offset + info.size);
 
 //                encodedData.array();
-                if (outputStream != null) {
-                    try {
-                        byte[] bs = new byte[info.size];
-                        encodedData.get(bs, info.offset, info.offset + info.size);
-                        outputStream.write(bs);
-                        outputStream.flush();
-                        Log.e("Binson", "flush..." + bs.length);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+//                if (outputStream != null) {
+//                    try {
+                byte[] bs = new byte[info.size];
+                encodedData.get(bs, info.offset, info.offset + info.size);
+//                        outputStream.write(bs);
+//                        outputStream.flush();
+//                        Log.e("Binson", "flush..." + bs.length);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+                good = bs;
+                Log.d("SendFrameSendFrame", bs.length + "");
+                networkNative.SendFrame(bs, bs.length, 1);
 
                 encoderDone = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
                 mVideoEncoder.releaseOutputBuffer(encoderStatus, false);
@@ -219,14 +229,14 @@ public final class MyVideoMonitor {
         @Override
         public void run() {
             try {
-                Log.e("Binson", "start Server");
-                ServerSocket serverSocket = new ServerSocket(60000);
-                Log.e("Binson", "Server is On");
-                Socket socket = serverSocket.accept();
-                Log.e("Binson", "got Client!");
-                outputStream = socket.getOutputStream();
+//                Log.e("Binson", "start Server");
+//                ServerSocket serverSocket = new ServerSocket(60000);
+//                Log.e("Binson", "Server is On");
+//                Socket socket = serverSocket.accept();
+//                Log.e("Binson", "got Client!");
+//                outputStream = socket.getOutputStream();
                 work1(outputStream);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 Log.e("Binson", "start server error!" + e.toString());
             }
