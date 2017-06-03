@@ -94,14 +94,15 @@ public final class MyVideoMonitor {
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean encoderDone = false;
         while (!encoderDone) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             int encoderStatus = mVideoEncoder.dequeueOutputBuffer(info, 0);
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 if (good != null) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Log.d("SendFrameSendFrame", good.length + ";;;;;;");
                     networkNative.SendFrame(good, good.length, 1);
                 }
                 // no output available yet
@@ -133,14 +134,20 @@ public final class MyVideoMonitor {
 //                        e.printStackTrace();
 //                    }
 //                }
-                good = bs;
-                Log.d("SendFrameSendFrame", bs.length + "");
-                networkNative.SendFrame(bs, bs.length, 1);
+                if (info.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
+                    good = bs;
+                    Log.d("SendFrameSendFrame", bs.length + "" + ">>>F");
+                    networkNative.SendFrame(bs, bs.length, 1);
+                } else {
+                    Log.d("SendFrameSendFrame", bs.length + "" + ">>>N");
+                    networkNative.SendFrame(bs, bs.length, 0);
+                }
 
                 encoderDone = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
                 mVideoEncoder.releaseOutputBuffer(encoderStatus, false);
             }
         }
+
     }
 
 
