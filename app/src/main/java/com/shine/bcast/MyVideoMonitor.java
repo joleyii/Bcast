@@ -9,6 +9,9 @@ import android.view.Surface;
 
 import com.example.local.NetworkNative;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -32,6 +35,7 @@ public final class MyVideoMonitor {
         this.projection = projection;
         this.networkNative = new NetworkNative();
         networkNative.OpenSocket();
+        createfile();
     }
 
     public static MyVideoMonitor getInstance(MediaProjection projection) {
@@ -98,12 +102,17 @@ public final class MyVideoMonitor {
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 if (good != null) {
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     Log.d("SendFrameSendFrame", good.length + ";;;;;;");
                     networkNative.SendFrame(good, good.length, 1);
+                    try {
+                        outputStream1.write(good, 0, good.length);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 // no output available yet
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -138,9 +147,19 @@ public final class MyVideoMonitor {
                     good = bs;
                     Log.d("SendFrameSendFrame", bs.length + "" + ">>>F");
                     networkNative.SendFrame(bs, bs.length, 1);
+                    try {
+                        outputStream1.write(bs, 0, bs.length);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Log.d("SendFrameSendFrame", bs.length + "" + ">>>N");
                     networkNative.SendFrame(bs, bs.length, 0);
+                    try {
+                        outputStream1.write(bs, 0, bs.length);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 encoderDone = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
@@ -254,5 +273,15 @@ public final class MyVideoMonitor {
         }
 
     }
+    private BufferedOutputStream outputStream1;
 
+    private void createfile() {
+        String path = "/sdcard/aa.h264";
+        File file = new File(path);
+        try {
+            outputStream1 = new BufferedOutputStream(new FileOutputStream(file));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
